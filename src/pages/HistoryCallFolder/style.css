@@ -1,0 +1,85 @@
+.hidden {
+  display: none;
+}
+.image-container {
+  display: inline-block;
+  width: 300px !important;
+  height: 200px !important;
+  object-fit: cover !important;
+}
+.image-checkbox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100;
+}
+.element-row {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+  align-items: center;
+  gap: 20px;
+}
+.element-col {
+  border: 1px solid #ddd;
+  height: 100%;
+  margin-right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+  flex-direction: column;
+  padding-top: 1rem;
+  border-radius: 2px;
+  width: 16.6667%;
+  margin-right: 2%;
+  margin-left: 2%;
+  border-radius: 5%;
+}
+
+.disable-select {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+}
+
+.slick-slider {
+  margin-bottom: 30px;
+}
+.slick-slider img {
+  margin: auto;
+  width: 100%;
+}
+.slick-slider .slick-track {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+.slick-slider .slick-dots li button:before {
+  font-size: 14px;
+  line-height: 20px;
+  color: #757575;
+}
+.slick-slider .slick-arrow {
+  position: absolute;
+}
+.slick-slider .slick-arrow.slick-next {
+  top: 50%;
+  right: 0;
+  z-index: 100;
+  color: #000;
+}
+.slick-slider .slick-arrow.slick-prev {
+  top: 50%;
+  left: 0;
+  z-index: 100;
+  color: #000;
+}

@@ -1,0 +1,45 @@
+.hidden {
+  display: none;
+}
+.image-container {
+  display: inline-block;
+  width: 300px;
+  height: 200px;
+  object-fit: cover;
+}
+.image-checkbox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100;
+}
+.element-col {
+  border: 1px solid #ddd;
+  position: relative;
+
+  height: 100%;
+  margin-right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-direction: column;
+  padding-top: 1rem;
+  border-radius: 2px;
+  width: 16.6667%;
+  margin-right: 2%;
+  margin-left: 2%;
+  border-radius: 5%;
+}
+
+.element-row_manager {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
