@@ -28,3 +28,8 @@
     transform: rotate(360deg);
   }
 }
+.image-container_video {
+  border-radius: 5px;
+  border: 2px solid #44488f;
+  object-fit: cover !important;
+}

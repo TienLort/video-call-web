@@ -9,7 +9,7 @@ import useFirestore from "../../hooks/useFirestore";
 import { AiFillVideoCamera } from 'react-icons/ai';
 import { RiUserAddLine } from 'react-icons/ri';
 import { Input as AntdInput } from "antd";
-import html2canvas from 'html2canvas';
+import { message } from 'antd';
 const HeaderStyled = styled.div`
   display: flex;
   justify-content: space-between;
@@ -91,25 +91,35 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
         setInputValue(e.target.value);
     };
     const handleOnSubmit = () => {
-        addMessage("messages", {
-            text: inputValue,
-            uid,
-            photoURL,
-            roomId: selectedRoom.id,
-            displayName,
+        form.validateFields().then(() => {
+            if (inputValue.trim() == "") {
+                message.error('tin nhắn không được để trống');
+            } else {
+                addMessage("messages", {
+                    text: inputValue,
+                    uid,
+                    photoURL,
+                    roomId: selectedRoom.id,
+                    displayName,
+                });
+
+                form.resetFields(["message"]);
+
+                // focus to input again after submit
+                if (inputRef?.current) {
+                    setTimeout(() => {
+                        const inputElement = inputRef.current?.input;
+                        if (inputElement) {
+                            inputElement.focus();
+                        }
+                    });
+                }
+            }
+        }).catch((errors) => {
+            // Hiển thị thông báo lỗi
+            message.error('tin nhắn không được để trống');
         });
 
-        form.resetFields(["message"]);
-
-        // focus to input again after submit
-        if (inputRef?.current) {
-            setTimeout(() => {
-                const inputElement = inputRef.current?.input;
-                if (inputElement) {
-                    inputElement.focus();
-                }
-            });
-        }
     };
 
     const condition = React.useMemo(
@@ -182,7 +192,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
                             ))}
                         </MessageListStyled>
                         <FormStyled form={form}>
-                            <Form.Item name="message">
+                            <Form.Item name="message" rules={[
+                                {
+                                    required: true,
+                                    message: ""
+                                },
+                            ]}>
                                 <AntdInput
                                     ref={inputRef}
                                     onChange={handleInputChange}

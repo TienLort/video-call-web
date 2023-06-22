@@ -4,18 +4,15 @@ import {
     ICameraVideoTrack,
     IMicrophoneAudioTrack
 } from "agora-rtc-react";
-import { useContext, useEffect, useRef, useState } from "react";
-
-import { AppContext } from "src/Context/AppProvider";
 import "src/css/room.css";
 
 
 const Videos = (props: {
     users: IAgoraRTCRemoteUser[];
     tracks: [IMicrophoneAudioTrack, ICameraVideoTrack];
+    trackRef: React.RefObject<HTMLDivElement>
 }) => {
-    const { users, tracks } = props;
-    const trackRef = useContext(AppContext);
+    const { users, tracks, trackRef } = props;
     let userIdInDisplayFrame: string | null = null;
     const displayFrame = document.getElementById('stream__box');
     const hideDisplayFrame = () => {
@@ -61,9 +58,10 @@ const Videos = (props: {
         }
     }
 
+    console.log("Vao kiemtra Ref Video", trackRef.current)
     return (
-        <section id="stream__container" ref={trackRef}>
-            <div id="stream__box" ></div>
+        <section id="stream__container" >
+            <div id="stream__box" ref={trackRef}></div>
             <div id="streams__container" >
                 <div className="videos" onClick={expandVideoFrame} id="videos--1">
                     <AgoraVideoPlayer className='vid' videoTrack={tracks[1]} />
@@ -72,7 +70,7 @@ const Videos = (props: {
                     users.map((user, index) => {
                         if (user.videoTrack) {
                             return (
-                                <div className="videos" onClick={expandVideoFrame} id={`video-${index}`}>
+                                <div className="videos" onClick={expandVideoFrame} id={`video-${index}`} key={index}>
                                     <AgoraVideoPlayer className='vid' videoTrack={user.videoTrack} key={user.uid} />
                                 </div>
                             );

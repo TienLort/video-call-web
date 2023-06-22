@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { createRef, useRef, useState } from "react";
 import useFirestore from "../hooks/useFirestore";
 import { AuthContext } from "./AuthProvider";
 
@@ -20,7 +20,7 @@ const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [selectedRoomId, setSelectedRoomId] = useState("");
   const authContext = React.useContext(AuthContext);
   const uid = authContext?.user.uid;
-  const trackRef = useRef<HTMLDivElement>();
+  const trackRef = useRef<HTMLDivElement>(null);
   const roomsCondition = React.useMemo<Condition>(() => {
     return {
       fieldName: "members",
@@ -51,7 +51,7 @@ const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setIsInviteMemberVisible(false);
     setIsCalling(false);
   };
-
+  console.log("vao ref tu App", trackRef.current)
   return (
     <AppContext.Provider
       value={{

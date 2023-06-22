@@ -16,12 +16,14 @@ import datetime
 import json
 import firebase_admin
 from firebase_admin import credentials
+import matplotlib.pyplot as plt
 # from firebase_admin import storage
 from google.cloud import storage
 from google.cloud import firestore
 import mediapipe as mp
 from tempfile import NamedTemporaryFile
-from io import BytesIO
+import io
+import base64
 import torch
 from fastapi.middleware.cors import CORSMiddleware
 # Tạo đối tượng firebase
@@ -32,7 +34,7 @@ firebase_admin.initialize_app(cred, {
 })
 bucket_name = 'videocalldb.appspot.com'
 
-out_path = "E:\\AI-PBL\\PBL\\ViT\\dataset\\data"
+out_path = "E:\AI-PBL\\PBL\\video-call-web\\api\\data"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "E:\AI-PBL\PBL\ViT\\videocalldb.json"
 db = firestore.Client()
 client = storage.Client()
@@ -48,6 +50,10 @@ class User(BaseModel):
 
 class DeepFake(BaseModel):
     type: str
+    urlUpload: str
+
+
+class LocationData(BaseModel):
     urlUpload: str
 
 
@@ -126,11 +132,9 @@ def framing(urlUpload, input_path, output_path):
                 real = True
             else:
                 real = False
-
             frame_step = 10
             frame_num = 0
             picture_num = 0
-
             while real:
                 real, frame = capture.read()
                 # fix blank img
@@ -283,14 +287,16 @@ def UploadResult(document_name, data):
     doc_ref.set(data)
 
 
+modelTest = EfficientViT(channels=1280, selected_efficient_net=0)
+modelTest.load_state_dict(torch.load(
+    'E:\AI-PBL\PBL\\BaoCaoDoAn\\EfficientViT_checkpoint_39_v2.pt', map_location=torch.device('cpu')))
+modelTest.eval()
+modelTest = modelTest.cpu()
+
+
 def RunModel(path, type, folder_name):
     dataset = get_data(path, type)
     start_time = time.time()
-    modelTest = EfficientViT(channels=1280, selected_efficient_net=0)
-    modelTest.load_state_dict(torch.load(
-        'E:\AI-PBL\PBL\\data\\EfficientViT_checkpoint_39.pt', map_location=torch.device('cpu')))
-    modelTest.eval()
-    modelTest = modelTest.cpu()
     bar = Bar('Predicting', max=len(dataset))
     preds = []
     for index, video in enumerate(dataset):
@@ -455,6 +461,20 @@ async def process_deepfake(data: DeepFake):
     delta_time = datetime.timedelta(seconds=(end_time-start_time))
     print(delta_time)
 
+
+# @app.post("/api/location")
+# async def process_location(data: LocationData):
+#     image_data = data.urlUpload.split(",")[1]
+#     image_bytes = io.BytesIO(base64.b64decode(image_data))
+#     image_load = Image.open(image_bytes).convert('RGB')
+#     image_np = np.array(image_load)
+#     # image = face_recognition.load_image_file(image_np)
+#     face_locations = face_recognition.face_locations(image_np)
+
+#     if len(face_locations) == 0:
+#         return []
+#     top, right, bottom, left = face_locations[0]
+#     return {top, right, bottom, left}
 # start_time = time.time()
 #     client = storage.Client()
 #     bucket = client.get_bucket(bucket_name)

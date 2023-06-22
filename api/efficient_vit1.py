@@ -1,11 +1,7 @@
 import torch
 from torch import nn
-
-
 from einops import rearrange
 from efficientnet_pytorch import EfficientNet
-import cv2
-import re
 from torch import einsum
 
 
@@ -81,7 +77,7 @@ class Transformer(nn.Module):
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
                 PreNorm(dim, Attention(dim, heads=heads,
-                        dim_head=dim_head, dropout=dropout)),
+                                       dim_head=dim_head, dropout=dropout)),
                 PreNorm(dim, FeedForward(
                     dim=dim, hidden_dim=mlp_dim, dropout=0))
             ]))
@@ -97,17 +93,30 @@ class EfficientViT(nn.Module):
     def __init__(self, channels=512, selected_efficient_net=0):
         super().__init__()
 
+#         image_size = 224
+#         patch_size = 7
+#         num_classes = 1
+
+#         dim = 1024
+#         depth = 4
+#         heads = 6
+#         mlp_dim = 1024
+#         emb_dim = 32
+#         dim_head = 64
+#         dropout = 0.35
+#         emb_dropout = 0.35
+
         image_size = 224
         patch_size = 7
         num_classes = 1
         dim = 1024
-        depth = 6
-        heads = 8
-        mlp_dim = 2048
+        depth = 4
+        heads = 6
+        mlp_dim = 1024
         emb_dim = 32
         dim_head = 64
-        dropout = 0.15
-        emb_dropout = 0.15
+        dropout = 0.25
+        emb_dropout = 0.25
 
         assert image_size % patch_size == 0, 'image dimensions must be divisible by the patch size'
 
@@ -116,18 +125,10 @@ class EfficientViT(nn.Module):
         if selected_efficient_net == 0:
             self.efficient_net = EfficientNet.from_pretrained(
                 'efficientnet-b0')
-        else:
-            self.efficient_net = EfficientNet.from_pretrained(
-                'efficientnet-b7')
-            checkpoint = torch.load(
-                "/kaggle/input/efficientnet-b7/final_999_DeepFakeClassifier_tf_efficientnet_b7_ns_0_23", map_location="cpu")
-            state_dict = checkpoint.get("state_dict", checkpoint)
-            self.efficient_net.load_state_dict(
-                {re.sub("^module.", "", k): v for k, v in state_dict.items()}, strict=False)
 
         for i in range(0, len(self.efficient_net._blocks)):
             for index, param in enumerate(self.efficient_net._blocks[i].parameters()):
-                if i >= len(self.efficient_net._blocks)-3:
+                if i >= len(self.efficient_net._blocks) - 3:
                     param.requires_grad = True
                 else:
                     param.requires_grad = False
@@ -149,6 +150,7 @@ class EfficientViT(nn.Module):
         self.mlp_head = nn.Sequential(
             nn.Linear(dim, mlp_dim),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(mlp_dim, num_classes)
         )
 
@@ -156,7 +158,6 @@ class EfficientViT(nn.Module):
         p = self.patch_size
         x = self.efficient_net.extract_features(img)  # 1280x7x7
         y = rearrange(x, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
-        #y2 = rearrange(x2, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = p, p2 = p)
         y = self.patch_to_embedding(y)
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, y), 1)

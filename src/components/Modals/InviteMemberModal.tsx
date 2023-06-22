@@ -113,7 +113,6 @@ const InviteMemberModal: React.FC = () => {
     // reset form value
     form.resetFields();
     setValue([]);
-
     // update members in current room
     const roomRef = doc(collection(db, "rooms"), selectedRoomId);
 

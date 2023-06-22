@@ -1,11 +1,11 @@
 .hidden {
   display: none;
 }
-.image-container {
+.image-container_his {
   display: inline-block;
-  width: 300px !important;
-  height: 200px !important;
   object-fit: cover !important;
+  border-radius: 5px;
+  border: 2px solid #44488f;
 }
 .image-checkbox {
   position: absolute;
@@ -76,10 +76,39 @@
   right: 0;
   z-index: 100;
   color: #000;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
 }
 .slick-slider .slick-arrow.slick-prev {
   top: 50%;
   left: 0;
   z-index: 100;
   color: #000;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+}
+
+.slick-slider .slick-arrow.slick-next:hover,
+.slick-slider .slick-arrow.slick-prev:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.imageBox {
+  flex-grow: 1;
+  align-items: center;
+  margin-left: 15px;
+  padding-left: 15px;
+  border-left: 1px solid #ccc;
+}
+.vidBox {
+  box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+  width: 40vw;
+  border: 1px solid #383528;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.vidBox:hover {
+  opacity: 0.9;
 }

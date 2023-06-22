@@ -1,0 +1,115 @@
+    // const captureFrame = async () => {
+    //     setInterval(async () => {
+    //         if (trackRef?.current?.children[0] !== undefined) {
+    //             let uid = String(Math.floor(Math.random() * 1000))
+    //             html2canvas(trackRef.current).then(async (canvas) => {
+    //                 const image = canvas.toDataURL();
+    //                 const payload = {
+    //                     urlUpload: image,
+    //                 };
+    //                 const getLocation = await fetch(`${API_URL}/api/location`, {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                     },
+    //                     body: JSON.stringify(payload),
+    //                 });
+    //                 if (getLocation.ok) {
+    //                     const data = await getLocation.json();
+    //                     // Sử dụng dữ liệu trả về ở đây
+    //                     console.log(data);
+    //                 } else {
+    //                     // Xử lý khi có lỗi trong phản hồi từ API
+    //                     console.error('Có lỗi xảy ra trong phản hồi từ API');
+    //                 }
+    //             });
+
+    //         } else {
+    //             message.info("Hãy chọn khung hình bạn muốn xử lý")
+    //         }
+    //     }, 5000);
+    // };
+
+
+    // const toggleCapture = () => {
+    //     setIsCapturing((prevIsCapturing) => !prevIsCapturing);
+    // };
+    // const intervalIdRef = React.useRef<NodeJS.Timeout | null>(null);
+    // const [boundingBoxPoints, setBoundingBoxPoints] = useState<number[]>([]);
+    // useEffect(() => {
+    //     const captureFrame = async () => {
+    //         if (trackRef?.current?.children[0] !== undefined) {
+    //             let uid = String(Math.floor(Math.random() * 1000));
+    //             html2canvas(trackRef.current).then(async (canvas) => {
+    //                 const image = canvas.toDataURL();
+    //                 const payload = {
+    //                     urlUpload: image,
+    //                 };
+    //                 const getLocation = await fetch(`${API_URL}/api/location`, {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                     },
+    //                     body: JSON.stringify(payload),
+    //                 });
+    //                 if (getLocation.ok) {
+    //                     const data = await getLocation.json();
+    //                     // Sử dụng dữ liệu trả về ở đây
+    //                     console.log(data);
+    //                     setBoundingBoxPoints(data);
+    //                     while (trackRef.current?.querySelector('canvas')) {
+    //                         const canvasToRemove = trackRef.current.querySelector('canvas');
+    //                         canvasToRemove?.parentNode?.removeChild(canvasToRemove);
+    //                     }
+    //                 } else {
+    //                     // Xử lý khi có lỗi trong phản hồi từ API
+    //                     console.error('Có lỗi xảy ra trong phản hồi từ API');
+    //                 }
+    //             });
+    //         } else {
+    //             message.info('Hãy chọn khung hình bạn muốn xử lý');
+    //         }
+    //     };
+
+    //     if (isCapturing) {
+    //         intervalIdRef.current = setInterval(captureFrame, 1000);
+    //     }
+
+    //     return () => {
+    //         if (intervalIdRef.current) {
+    //             clearInterval(intervalIdRef.current);
+    //         }
+    //     };
+    // }, [isCapturing]);
+    // useEffect(() => {
+    //     const canvas = document.createElement('canvas');
+    //     const ctx = canvas.getContext('2d');
+
+    //     if (ctx && boundingBoxPoints.length === 4) {
+    //         const [top, right, bottom, left] = boundingBoxPoints;
+    //         console.log("bounding", [top, right, bottom, left])
+    //         // Thiết lập kích thước canvas
+    //         canvas.width = trackRef.current?.offsetWidth || 0;
+    //         canvas.height = trackRef.current?.offsetHeight || 0;
+    //         // Xóa khung cũ
+    //         ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //         // Vẽ khung vuông
+    //         ctx.strokeStyle = 'red';
+    //         ctx.lineWidth = 1;
+    //         ctx.beginPath();
+    //         ctx.rect(left, top, right - left, bottom - top);
+    //         ctx.closePath();
+    //         ctx.stroke();
+
+    //         const videoElement = trackRef.current?.querySelector('video');
+
+    //         if (videoElement) {
+    //             // Đưa canvas vào trước video
+    //             canvas.style.position = 'absolute';
+    //             canvas.style.top = '0';
+    //             canvas.style.left = '0';
+    //             canvas.style.zIndex = '2';
+    //             videoElement.insertAdjacentElement('afterend', canvas);
+    //         }
+    //     }
+    // }, [boundingBoxPoints]);

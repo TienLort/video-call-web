@@ -4,10 +4,11 @@ import {
     ClientConfig,
     createMicrophoneAndCameraTracks
 } from "agora-rtc-react";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "src/css/room.css";
 import Controls from "./Controls";
 import Videos from "./Videos";
+import { AppContext } from "src/Context/AppProvider";
 
 const config: ClientConfig = {
     mode: "rtc", codec: "vp8",
@@ -30,7 +31,7 @@ const VideoCall = (props: {
     const client = useClient();
     // ready is a state variable, which returns true when the local tracks are initialized, untill then tracks variable is null
     const { ready, tracks } = useMicrophoneAndCameraTracks();
-
+    const trackRef = useContext(AppContext);
     useEffect(() => {
         // function to initialise the SDK
         let init = async (name: string) => {
@@ -83,9 +84,9 @@ const VideoCall = (props: {
     return (
         <div className="App">
             {ready && tracks && (
-                <Controls tracks={tracks} setStart={setStart} setInCall={setInCall} client={client} channelName={channelName} />
+                <Controls tracks={tracks} setStart={setStart} setInCall={setInCall} client={client} channelName={channelName} trackRef={trackRef} />
             )}
-            {start && tracks && <Videos users={users} tracks={tracks} />}
+            {start && tracks && <Videos users={users} tracks={tracks} trackRef={trackRef} />}
         </div>
     );
 };

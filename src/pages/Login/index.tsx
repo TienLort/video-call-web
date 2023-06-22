@@ -1,8 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { BsFacebook, BsGoogle } from 'react-icons/bs';
 
 import { Button } from "antd";
-import { useNavigate } from "react-router-dom";
 import {
   FacebookAuthProvider,
   signInWithPopup,
@@ -11,28 +10,58 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  getAuth
 } from "firebase/auth";
 import { auth, db } from "../../firebase/config";
 import { addDocument, generateKeywords } from "../../firebase/services";
 import "./login.css";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { AuthContext } from "src/Context/AuthProvider";
-
+import { useForm, SubmitHandler } from "react-hook-form"
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { toast } from 'react-toastify';
 const fbProvider = new FacebookAuthProvider();
 const googleProvider = new GoogleAuthProvider();
 
+interface IFormInput {
+  passwordLogin: string
+  emailLogin: string
+}
+interface IFormSignUp {
+  passwordRegis: string
+  emailRegis: string
+  nameRegis: string
+  confirmPassword: string
+}
+const schema = yup.object().shape({
+  emailLogin: yup.string().required('Email is required').email('Invalid email format'),
+  passwordLogin: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+});
+
+const schemaSignUp = yup.object().shape({
+  nameRegis: yup.string().required('Please enter your name').min(3, 'Name must be at least 3 characters'),
+  emailRegis: yup.string().required('Please enter your email').email('Invalid email format'),
+  passwordRegis: yup.string().required('Please enter a password').min(6, 'Password must be at least 6 characters'),
+  confirmPassword: yup.string().oneOf([yup.ref('passwordRegis'), null], 'Passwords must match'),
+});
+
+
 const Login = () => {
   const [isRegister, setIsRegister] = useState(true);
-  const navigate = useNavigate();
   const API_URL = "http://127.0.0.1:8000"
-  const [emailLogin, setEmailLogin] = useState("");
-  const [passwordLogin, setPasswordLogin] = useState("");
   const [emailRegis, setEmailRegis] = useState("");
   const [nameRegis, setNameRegis] = useState("");
   const [passwordRegis, setPasswordRegis] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const authContext = useContext(AuthContext);
+  const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>({
+    resolver: yupResolver(schema),
+  })
+
+  const { register: signUpRegister, handleSubmit: signUpHandlerSubmit, formState: { errors: signUpErrors } } = useForm<IFormSignUp>({
+    resolver: yupResolver(schemaSignUp),
+  })
+
   const handleLogin = (provider: any) => {
     signInWithPopup(auth, provider).then((result) => {
       const user = result.user;
@@ -50,19 +79,12 @@ const Login = () => {
       }
     });
   };
-  const handleSubmitLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
 
-    if (!emailLogin || !passwordLogin) return console.log("Loi roi kia");
-    const data = {
-      emailLogin,
-      passwordLogin,
-    };
+  const onSubmitLogin: SubmitHandler<IFormInput> = (data) => {
     signInWithEmailAndPassword(auth, data.emailLogin, data.passwordLogin)
       .then(async (userCredential) => {
-        // Signed in 
         const user = userCredential.user;
-        console.log("user tu login", user)
+
         const userRef = collection(db, "Users");
         const q = query(userRef, where("email", "==", user.email));
         const userSnapshot = await getDocs(q);
@@ -71,9 +93,22 @@ const Login = () => {
         });
       })
       .catch((error) => {
-        console.log(error);
+        toast.error(`Sai tài khoản hoặc mật khẩu, vui lòng đăng nhập lại!`, {
+          position: "bottom-left",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
       });
+  }
 
+  const onSubmitSignUp: SubmitHandler<IFormSignUp> = (data) => {
+
+    console.log(data);
   };
 
   const handleSubmitRegister = (e: React.FormEvent<HTMLFormElement>) => {
@@ -88,12 +123,7 @@ const Login = () => {
     if (passwordRegis.length < 6) {
       return console.log("Password must be of length 3 or more");
     }
-    // if (
-    //   !/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(password)
-    // ) {
-    //   return console.log(
-    //     "Password must have alteast a number and a special character!"
-    //   );
+
     const data = {
       nameRegis,
       emailRegis,
@@ -143,8 +173,6 @@ const Login = () => {
           .catch(err => {
             console.log(err);
           });
-
-
       }
     })
       .catch((error) => {
@@ -160,35 +188,43 @@ const Login = () => {
   return (
     <div className={isRegister ? "login" : "login right-panel-active"}>
       <div className="form-container sign-up-container">
-        <form onSubmit={handleSubmitRegister}>
+        <form onSubmit={signUpHandlerSubmit(onSubmitSignUp)}>
           <h1>Create Account</h1>
           <span>Use your email for registration</span>
           <input
             type="text"
             placeholder="Name"
             autoComplete="off"
-            value={nameRegis}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNameRegis(e.target.value)
-            }
-          />
-          <input type="email" placeholder="Email" autoComplete="off" value={emailRegis}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmailRegis(e.target.value)
-            } />
-          <input type="password" placeholder="Password" autoComplete="off" value={passwordRegis}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPasswordRegis(e.target.value)
-            } />
-          <input type="password" placeholder="Re-type Password" autoComplete="off" value={confirmPassword}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConfirmPassword(e.target.value)
-            } />
+            {...signUpRegister("nameRegis")}
+            style={{ border: signUpErrors.nameRegis ? "1px solid red" : "" }} />
+          {signUpErrors.nameRegis && <p style={{ margin: 0, color: "red" }}>{signUpErrors.nameRegis.message}</p>}
+
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="off"
+            {...signUpRegister("emailRegis")}
+            style={{ border: signUpErrors.emailRegis ? "1px solid red" : "" }} />
+          {signUpErrors.emailRegis && <p style={{ margin: 0, color: "red" }}>{signUpErrors.emailRegis.message}</p>}
+
+          <input
+            type="password"
+            placeholder="Password"
+            autoComplete="off"
+            {...signUpRegister("passwordRegis")}
+            style={{ border: signUpErrors.passwordRegis ? "1px solid red" : "" }} />
+          {signUpErrors.passwordRegis && <p style={{ margin: 0, color: "red" }}>{signUpErrors.passwordRegis.message}</p>}
+
+          <input
+            type="password"
+            placeholder="Re-type Password"
+            autoComplete="off"
+            {...signUpRegister("confirmPassword")}
+            style={{ border: signUpErrors.confirmPassword ? "1px solid red" : "" }} />
+          {signUpErrors.confirmPassword && <p style={{ margin: 0, color: "red" }}>{signUpErrors.confirmPassword.message}</p>}
+
           <button
             className="buttonLog"
-            // onClick={() => {
-            //   navigate("/chat");
-            // }}
             type="submit"
           >
             Sign Up
@@ -196,7 +232,7 @@ const Login = () => {
         </form>
       </div>
       <div className="form-container sign-in-container">
-        <form onSubmit={handleSubmitLogin}>
+        <form onSubmit={handleSubmit(onSubmitLogin)}>
           <h1>Sign in</h1>
           <div className="social-container">
             <Button
@@ -215,18 +251,11 @@ const Login = () => {
             />
           </div>
           <span>or use your account</span>
-          <input type="email" placeholder="Email" autoComplete="off" value={emailLogin}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmailLogin(e.target.value)
-            } />
-          <input type="password" placeholder="Password" autoComplete="off" value={passwordLogin}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPasswordLogin(e.target.value)
-            } />
+          <input type="email" placeholder="Email" autoComplete="off" {...register("emailLogin")} style={{ border: errors.emailLogin ? "1px solid red" : "" }} />
+          {errors.emailLogin && <p style={{ margin: 0, color: "red" }}>{errors.emailLogin.message}</p>}
+          <input type="password" placeholder="Password" autoComplete="off" {...register("passwordLogin")} style={{ border: errors.passwordLogin ? "1px solid red" : "" }} />
+          {errors.passwordLogin && <p style={{ margin: 0, color: "red" }}>{errors.passwordLogin.message}</p>}
           <button
-            // onClick={() => {
-            //   navigate("/chat");
-            // }}
             type="submit"
             className="buttonLog"
           >

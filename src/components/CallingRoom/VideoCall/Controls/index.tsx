@@ -1,3 +1,7 @@
+
+import { message } from 'antd';
+import { toast } from "react-toastify";
+
 import {
     ICameraVideoTrack,
     IMicrophoneAudioTrack,
@@ -19,14 +23,15 @@ const Controls = (props: {
     setStart: React.Dispatch<React.SetStateAction<boolean>>;
     setInCall: React.Dispatch<React.SetStateAction<boolean>>;
     client: IAgoraRTCClient;
-    channelName: string
+    channelName: string;
+    trackRef: React.RefObject<HTMLDivElement>;
 }) => {
     const auContext = useContext(AuthContext)
     const displayName = auContext?.user.displayName
-    const { tracks, setStart, setInCall, client, channelName } = props;
+    const { tracks, setStart, setInCall, client, channelName, trackRef } = props;
     const [trackState, setTrackState] = useState({ video: true, audio: true });
     const API_URL = "http://127.0.0.1:8000"
-    const { selectedRoom, trackRef } = useContext(AppContext);
+    const { selectedRoom } = useContext(AppContext);
     const mute = async (e: React.MouseEvent, type: "audio" | "video") => {
         const button = e.currentTarget;
         if (type === "audio") {
@@ -67,44 +72,66 @@ const Controls = (props: {
 
     };
     const captureFrame = async () => {
-        if (trackRef.current) {
+        if (trackRef?.current?.children[0] !== undefined) {
             console.log(trackRef.current)
             let uid = String(Math.floor(Math.random() * 1000))
             html2canvas(trackRef.current).then((canvas) => {
                 const image = canvas.toDataURL();
                 const storageRef = ref(storage, `${displayName}/deepfake/CropUpload/CropImage${uid}/CropImage${uid}`);
                 uploadString(storageRef, image, 'data_url').then((snapshot) => {
-                    console.log('Uploaded a data_url string!');
+                    message.success('Hình ảnh đã được tải lên, vui lòng đợi trong giây lát');
                 });
             });
-            const payload = {
-                urlUpload: `${displayName}/deepfake/CropUpload/CropImage${uid}/CropImage${uid}`,
-                type: "video"
-            }
-            const findFaceResponse = await fetch(`${API_URL}/api/findface`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-            if (findFaceResponse.ok) {
-                // Nếu thành công, gọi tiếp API POST tới /api/deepfake
-                const deepFakeResponse = await fetch(`${API_URL}/api/deepfake`, {
+            setTimeout(async () => {
+                const payload = {
+                    urlUpload: `${displayName}/deepfake/CropUpload/CropImage${uid}/CropImage${uid}`,
+                    type: "img"
+                }
+                const findFaceResponse = await fetch(`${API_URL}/api/findface`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(payload)
-                });
+                    body: JSON.stringify(payload),
+                })
+                if (findFaceResponse.ok) {
+                    // Nếu thành công, gọi tiếp API POST tới /api/deepfake
+                    try {
+                        const deepFakeResponse = await fetch(`${API_URL}/api/deepfake`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
 
-                // Xử lý dữ liệu trả về từ deepfake API
-                const deepFakeData = await deepFakeResponse.json();
-                console.log(deepFakeData);
-            } else {
-                // Xử lý khi gọi findface API không thành công
-                console.error('Call to findface API failed.');
-            }
+                        if (deepFakeResponse.ok) {
+                            toast.success(`Hình ảnh đã được tính toán, bạn có thể xem kết quả tại CropImage${uid}!`, {
+                                position: "top-right",
+                                autoClose: 3000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                                theme: "light",
+                            });
+                        } else {
+                            // Xử lý khi gọi API không thành công
+                            throw new Error('Call to deepfake API failed.');
+                        }
+                    } catch (error) {
+                        // Xử lý lỗi ở đây
+                        console.error(error);
+                        message.error('Hệ thống không thể nhận diện khuôn mặt! ');
+                    }
+                } else {
+                    // Xử lý khi gọi findface API không thành công
+                    message.error('Hệ thống không thể nhận diện khuôn mặt! ');
+                }
+            }, 5000);
+        } else {
+            message.info("Hãy chọn khung hình bạn muốn xử lý")
         }
     };
 
