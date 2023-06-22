@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { AppContext } from "src/Context/AppProvider";
 import { addMessage } from "../../../firebase/services";
 import { AuthContext } from "src/Context/AuthProvider";
+import { message } from 'antd';
 const ChannelForm = (props: {
     setInCall: React.Dispatch<React.SetStateAction<boolean>>;
     setChannelName: React.Dispatch<React.SetStateAction<string>>;
@@ -23,7 +24,7 @@ const ChannelForm = (props: {
                 displayName: "Chat Bot :",
             });
         } else {
-            console.log("ban chua nhap room id")
+            message.error("Room Id không được để trống")
         }
     }
     return (

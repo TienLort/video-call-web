@@ -11,7 +11,7 @@ import img4 from "src/assets/images/Angelina_Jolie.png"
 import img5 from "src/assets/images/Tom_Cruise.png"
 import img6 from "src/assets/images/Gal_gadot.png"
 import img7 from "src/assets/images/middleline.svg"
-import { Image as AntdImage } from 'antd';
+import { Image as AntdImage, message } from 'antd';
 import { db } from "../../firebase/config";
 import {
     collection,
@@ -23,6 +23,8 @@ import {
     doc,
     getDoc,
 } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { result } from "lodash";
 
 const DeepFakeImage = () => {
     const [image, setImage] = useState<File | null>(null);
@@ -34,6 +36,7 @@ const DeepFakeImage = () => {
     const API_URL = "http://127.0.0.1:8000"
     const [dataResult, setDataResult] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate()
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files && event.target.files[0];
 
@@ -97,23 +100,22 @@ const DeepFakeImage = () => {
         console.log("Bat dau lay anh")
         setImgVid(downloadURLs)
     }
-    console.log(imgVid)
     const handleUploadButtonClick = async (file: File | null) => {
         if (!file) {
             // Người dùng không chọn ảnh
-            alert("Vui lòng chọn một ảnh");
+            message.info("Vui lòng chọn một ảnh");
             return;
         }
         if (file) {
             setIsLoading(true);
             setImgVid([])
             setDataResult(null)
-            const storageRef = ref(storage, `${displayName}/deepfake/ImageUpload/ImageUpload${file.lastModified}/ImageUpload${file.lastModified}`);
+            const storageRef = ref(storage, `${displayName}/deepfake/ImageUpload/Image_${file.name.split(".")[0]}/Image_${file.name.split(".")[0]}`);
             await uploadBytes(storageRef, file).then((snapshot) => {
                 console.log('Uploaded a blob or file!');
             });
             const payload = {
-                urlUpload: `${displayName}/deepfake/ImageUpload/ImageUpload${file.lastModified}/ImageUpload${file.lastModified}`,
+                urlUpload: `${displayName}/deepfake/ImageUpload/Image_${file.name.split(".")[0]}/Image_${file.name.split(".")[0]}`,
                 type: "img"
             }
             console.log(payload)
@@ -126,7 +128,8 @@ const DeepFakeImage = () => {
             })
 
             if (findFaceResponse.ok) {
-                getImagesFromFirebase(`${displayName}/deepfake/ImageUpload/ImageUpload${file.lastModified}`)
+                console.log(`${displayName}/deepfake/ImageUpload/Image_${file.name.split(".")[0]}`)
+                getImagesFromFirebase(`${displayName}/deepfake/ImageUpload/Image_${file.name.split(".")[0]}`)
                 const deepFakeResponse = await fetch(`${API_URL}/api/deepfake`, {
                     method: 'POST',
                     headers: {
@@ -135,9 +138,7 @@ const DeepFakeImage = () => {
                     body: JSON.stringify(payload)
                 });
 
-                const deepFakeData = await deepFakeResponse.json();
-                console.log(deepFakeData);
-                const userRef = doc(db, "Results", `ImageUpload${file.lastModified}`);
+                const userRef = doc(db, "Results", `Image_${file.name.split(".")[0]}`);
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) {
                     setDataResult(docSnap.data());
@@ -160,29 +161,30 @@ const DeepFakeImage = () => {
             hiddenFileInput.current.click();
         }
     };
+    console.log(imgVid, dataResult)
     return (
-        <div style={{ height: '100%', overflowY: "auto" }}>
+        <div style={{ height: '100%', overflowY: "auto", padding: "0 20px" }}>
             {isLoading && (
                 <div className="overlay">
                     <div className="loader"></div>
                 </div>
             )}
             <div>
-                <h3>DeepFake Detection Demo</h3>
-                <p>Face Detection allows you to find faces in an image. Along with the position of the faces, Face Detection also provides key points (eyes, nose, mouth) for each face.</p>
+                <h3>Image DeepFake Detection</h3>
+                <p>Nhận diện khuôn mặt cho phép bạn tìm khuôn mặt trong một hình ảnh. Thông qua nhận diện hình ảnh, chúng tôi sẽ đánh giá khuôn mặt đã qua chỉnh sửa</p>
             </div>
             <div style={{ display: "flex", width: "100%" }}>
                 <div style={{ display: "flex", width: "60%", flexDirection: "column" }}>
                     <div>
-                        <div>Step 1:</div>
+                        <div>Bước 1:</div>
                         <div>
-                            Select from the following sample or upload your own image
+                            Lựa chọn hình ảnh cần kiểm tra
                         </div>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                         {imageArray.map((image, index) => (
-                            <div style={{ display: "flex", flexDirection: "column", marginBottom: "20px", marginRight: "20px", width: "30%" }}>
-                                <img key={index} src={image} alt={`Image ${index + 1}`} style={{ width: "100%" }} />
+                            <div style={{ display: "flex", flexDirection: "column", marginBottom: "20px", marginRight: "20px", width: "25%" }} key={index}>
+                                <img src={image} alt={`Image ${index + 1}`} style={{ width: "100%" }} />
                             </div>
                         ))}
                     </div>
@@ -223,23 +225,60 @@ const DeepFakeImage = () => {
                             className="image-upload-button"
                             onClick={() => handleUploadButtonClick(image)}
                         >
-                            Upload
+                            Tải lên
                         </button>
                     </div>
                 </div>
             </div>
-            <h3>Kết quả nhận diện hình ảnh:</h3>
-            <div style={{ display: 'flex' }}>
+            <div >
+
                 {imgVid.map((img, index) => (
-                    <div key={index} style={{ position: 'relative', display: img.includes("FR_") ? "block" : "none" }}>
-                        <AntdImage
-                            className={'image-container'}
-                            src={img}
-                        />
+                    <div key={index} style={{ position: 'relative', display: img.includes("FR_") ? "flex" : "none", marginBottom: '40px', justifyContent: "start", gap: '90px' }}>
+                        <div>
+                            <AntdImage
+                                className={'image-container'}
+                                src={img}
+                            />
+                        </div>
+                        <div>
+                            <h3 style={{ textAlign: "center", display: imgVid.length > 0 ? "block" : "none", margin: "0 0 10px 0" }}>Kết quả nhận diện hình ảnh:</h3>
+                            <table>
+                                <tr>
+                                    <th>Thông tin</th>
+                                    <th>Kết quả</th>
+                                </tr>
+                                <tr>
+                                    <td>Tên folder</td>
+                                    <td>{`Image_${image?.name.split(".")[0]}`}</td>
+                                </tr>
+                                <tr>
+                                    <td>Đường dẫn</td>
+                                    <td onClick={() => {
+                                        navigate(`/manager/Image_${image?.name.split(".")[0]}`, { state: { customData: `${displayName}/deepfake/ImageUpload` } })
+                                    }} style={{ color: "blue", cursor: "pointer" }}>{`deepfake/ImageUpload/Image_${image?.name.split(".")[0]}`}</td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái</td>
+                                    <td>Hoàn Thành</td>
+                                </tr>
+                                <tr>
+                                    <td>Kết quả đánh giá</td>
+                                    <td>{dataResult?.result == 0 ? "REAL" : "FAKE"}</td>
+                                </tr>
+                                <tr>
+                                    <td>tỷ lệ dự đoán</td>
+                                    <td>{dataResult?.result == 0 ? `${(Math.round((1 - dataResult?.percent) * 1000000)) / 10000} %` : `${(Math.round((dataResult?.percent) * 1000000)) / 10000} %`}</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={2}>Kết luận: Khuôn mặt {dataResult?.result == 0 ? " người thật" : "giả mạo"}</td>
+
+                                </tr>
+                            </table>
+                        </div>
                     </div>
+
                 ))}
             </div>
-            <h3>{dataResult?.percent}</h3>
         </div>
     );
 };

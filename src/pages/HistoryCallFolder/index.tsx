@@ -1,27 +1,20 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import "./style.css"
-import photo1 from "src/assets/images/1.png";
-import photo2 from "src/assets/images/logo.png";
-import photo3 from "src/assets/images/photo.png";
-import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { db, storage } from 'src/firebase/config';
 import { AuthContext } from 'src/Context/AuthProvider';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    faFileImage,
-    faFileAlt,
-    faFileAudio,
-    faFileVideo,
     faFolder,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Col, Modal, Row } from 'antd';
+import { Modal } from 'antd';
 import { Image } from 'antd';
-import { Breadcrumb } from 'antd';
-import { BreadcrumbItemType, BreadcrumbSeparatorType } from 'antd/es/breadcrumb/Breadcrumb';
 import { doc, getDoc } from 'firebase/firestore';
 import { SlickSlider } from 'src/components/slick_slider';
-
+import { Button } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 const HistoryCallFolder = () => {
     const location = useLocation();
     const id = location.pathname.split('/')[location.pathname.split('/').length - 1];
@@ -117,7 +110,7 @@ const HistoryCallFolder = () => {
     const handleButtonClick = async () => {
         if (showCheckboxes === true && selectedFolder.length > 0) {
             let file_path = ""
-            if (customData == undefined) {
+            if (customData === undefined) {
                 file_path = displayName + "/" + id
                 console.log("Các folder đã chọn:", selectedFolder);
             }
@@ -137,7 +130,7 @@ const HistoryCallFolder = () => {
             })
                 .then(response => {
                     if (response.ok) {
-                        if (selectedFolder.length == folder.length) {
+                        if (selectedFolder.length === folder.length) {
                             navigate(-1)
                         }
                         else {
@@ -175,12 +168,19 @@ const HistoryCallFolder = () => {
     };
     return (
         <div style={{ height: "100%", overflowY: "auto" }}>
-            {
-                id == "deepfake" || "call" ? <button onClick={handleButtonClick}>
-                    {showCheckboxes ? 'Xóa các mục đã chọn' : 'Hiển thị checkbox'}
-                </button> : <></>
-            }
-            <button onClick={handleNavigate}>Back</button>
+
+            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", padding: "8px 40px" }}>
+                <h2>{imgVid.length > 0 ? `${id}` : "File Management"}</h2>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <Button variant="outlined" onClick={handleButtonClick} sx={{ display: imgVid.length > 0 ? "none" : "inline-flex", marginRight: "12px" }} startIcon={<DeleteIcon />}>
+                        {showCheckboxes ? 'Accept' : 'Delete'}
+                    </Button>
+                    <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleNavigate} >
+                        Back
+                    </Button>
+                </div>
+
+            </div>
             <div className="element-row" style={{ display: folder.length > 0 ? "flex" : "none" }}>
                 {folder.map((data, index) => (
                     <div
@@ -217,39 +217,114 @@ const HistoryCallFolder = () => {
                     </div>
                 ))}
             </div>
-            {videoData.map((img, index) => (
-                <div>
-                    <video width="320" src={img} onClick={() => setOpen(prevOpen => [...prevOpen.slice(0, index), true, ...prevOpen.slice(index + 1)])}></video>
-                    <Modal
-                        title="Modal"
-                        centered
-                        open={open[index]}
-                        onOk={() => setOpen(prevOpen => [...prevOpen.slice(0, index), false, ...prevOpen.slice(index + 1)])}
-                        onCancel={handleModalClose}
-                        footer={[]}
-                        width={1000}
-                    >
-                        <video width="100%" src={img} controls ref={videoRef}></video>
-                    </Modal>
-                </div>
-            ))}
-            <h3 style={{ marginBottom: '20px' }}>{result?.percent}</h3>
-            <SlickSlider slidesToScroll={2} slidesToShow={4} infinite={true}>
-                {imageData.map((img, index) => (
-                    <div key={index} style={{ position: 'relative' }}>
-                        <Image className="image-container" src={img} />
-                    </div>
-                ))}
-            </SlickSlider>
-            <SlickSlider slidesToScroll={2} slidesToShow={4} infinite={true}>
-                {imgVid.map((img, index) => (
-                    <div key={index} style={{ position: 'relative' }}>
-                        <Image className="image-container" src={img} />
-                    </div>
-                ))}
-            </SlickSlider>
+            {videoData.length > 0 ? (
+                <div style={{ margin: "30px 10px" }}>
+                    {videoData.map((img, index) => (
+                        <div key={index} style={{ display: 'flex', gap: '20px' }}>
+                            <video className='vidBox' src={img} onClick={() => setOpen(prevOpen => [...prevOpen.slice(0, index), true, ...prevOpen.slice(index + 1)])}></video>
+                            <Modal
+                                title={`${id}`}
+                                centered
+                                open={open[index]}
+                                onOk={() => setOpen(prevOpen => [...prevOpen.slice(0, index), false, ...prevOpen.slice(index + 1)])}
+                                onCancel={handleModalClose}
+                                footer={[]}
+                                width={1000}
+                            >
+                                <video width="100%" src={img} controls ref={videoRef}></video>
+                            </Modal>
+                            <div >
+                                <h3 style={{ textAlign: "center", display: imgVid.length > 0 ? "block" : "none", margin: "0 0 10px 0" }}>Kết quả nhận diện video:</h3>
+                                <table>
+                                    <tr>
+                                        <th>Thông tin</th>
+                                        <th>Kết quả</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Trạng thái</td>
+                                        <td>Hoàn Thành</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kết quả đánh giá</td>
+                                        <td>{result?.result == 0 ? "REAL" : "FAKE"}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>tỷ lệ dự đoán</td>
+                                        <td>{result?.result == 0 ? `${(Math.round((1 - result?.percent) * 1000000)) / 10000} %` : `${(Math.round((result?.percent) * 1000000)) / 10000} %`}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={2}>Kết luận: Khuôn mặt {result?.result == 0 ? " người thật" : "giả mạo"}</td>
 
-        </div>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    ))}
+                    <h3 >Khung Frame cuả video:</h3>
+                    <SlickSlider slidesToScroll={2} slidesToShow={4} infinite={true}>
+                        {imageData.map((img, index) => (
+                            <div key={index} style={{ position: 'relative' }}>
+                                <Image className="image-container_his" src={img} />
+                            </div>
+                        ))}
+                    </SlickSlider>
+                    <h3 >Kết quả trích xuất khuôn mặt:</h3>
+                    <SlickSlider slidesToScroll={2} slidesToShow={4} infinite={true}>
+                        {imgVid.map((img, index) => (
+                            <div key={index} style={{ position: 'relative' }}>
+                                <Image className="image-container_his" src={img} />
+                            </div>
+                        ))}
+                    </SlickSlider>
+                </div>) : (<div style={{ display: 'flex', margin: "30px" }}>
+
+                    <div style={{ display: imageData.length > 0 ? "block" : "none", width: "40%" }}>
+                        <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>Dữ liệu ảnh tải lên:</h3>
+                        {imageData.map((img, index) => (
+                            <div key={index} >
+                                <Image src={img} />
+                            </div>
+                        ))}
+
+                    </div>
+                    <div style={{ display: imgVid.length > 0 ? "block" : "none" }} className='imageBox'>
+                        <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>Kết quả nhận diện hình ảnh:</h3>
+                        {imgVid.map((img, index) => (
+                            <div key={index} style={{ display: "flex", justifyContent: "center" }}>
+                                <Image className="image-container_his" src={img} />
+                            </div>
+                        ))}
+                        <div >
+
+                            <table>
+                                <tr>
+                                    <th>Thông tin</th>
+                                    <th>Kết quả</th>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái</td>
+                                    <td>Hoàn Thành</td>
+                                </tr>
+                                <tr>
+                                    <td>Kết quả đánh giá</td>
+                                    <td>{result?.result == 0 ? "REAL" : "FAKE"}</td>
+                                </tr>
+                                <tr>
+                                    <td>tỷ lệ dự đoán</td>
+                                    <td>{result?.result == 0 ? `${(Math.round((1 - result?.percent) * 1000000)) / 10000} %` : `${(Math.round((result?.percent) * 1000000)) / 10000} %`}</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={2}>Kết luận: Khuôn mặt {result?.result == 0 ? " người thật" : "giả mạo"}</td>
+
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>)
+            }
+
+
+        </div >
     )
 }
 

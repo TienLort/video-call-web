@@ -43,11 +43,38 @@
 .img-display-before {
   height: 200px;
   width: 200px;
-  margin-left: 35px;
 }
 
 .img-display-after {
   height: 200px;
   width: 200px;
   border-radius: 100%;
+}
+
+.image-container {
+  border-radius: 5px;
+  border: 2px solid #44488f;
+  width: 300px !important;
+  height: 300px !important;
+  object-fit: cover !important;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+td[colspan="2"] {
+  text-align: center;
+  font-weight: bold;
 }

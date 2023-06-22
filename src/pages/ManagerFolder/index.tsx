@@ -14,7 +14,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const ManagerFolder = () => {
     const [selectedFolder, setSelectedFolder] = useState<string[]>([]);
-    const [showCheckboxes, setShowCheckboxes] = useState(false);
     const [folder, setFolder] = useState<string[]>([]);
     const auContext = useContext(AuthContext)
     const displayName = auContext?.user.displayName
@@ -26,25 +25,6 @@ const ManagerFolder = () => {
             setSelectedFolder(prevSelectedFolder => [...prevSelectedFolder, data]);
         }
     };
-
-    const handleButtonClick = () => {
-        if (showCheckboxes === true && selectedFolder.length > 0) {
-            console.log("Các folder đã chọn:", selectedFolder);
-            if (selectedFolder.length == folder.length) {
-                navigate(-1)
-                console.log("Xoa Het")
-            } else {
-                console.log("Xoa tung file")
-
-            }
-            setSelectedFolder([]);
-        } else if (showCheckboxes === true) {
-            console.log("Không có folder nào được chọn.");
-        }
-        setShowCheckboxes(!showCheckboxes);
-    };
-
-
 
     useEffect(() => {
         const fetchData = async () => {
@@ -66,9 +46,9 @@ const ManagerFolder = () => {
     }, [])
     return (
         <div >
-            <button onClick={handleButtonClick}>
-                {showCheckboxes ? 'Xóa các mục đã chọn' : 'Hiển thị checkbox'}
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", padding: "8px 40px" }}>
+                <h2>File Management</h2>
+            </div>
             <div className="element-row_manager">
                 {folder.map((data, index) => (
                     <div
@@ -89,14 +69,6 @@ const ManagerFolder = () => {
                     >
                         <FontAwesomeIcon icon={faFolder} className="mt-3" style={{ fontSize: "3rem" }} />
                         <p className="text-center mt-3">{data}</p>
-                        {showCheckboxes && (
-                            <input
-                                type="checkbox"
-                                className="image-checkbox"
-                                checked={selectedFolder.includes(data)}
-                                onChange={() => handleCheckboxChange(data)}
-                            />
-                        )}
                     </div>
                 ))}
             </div>
