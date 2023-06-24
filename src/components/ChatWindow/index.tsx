@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Button, Tooltip, Avatar, Form, Alert, InputRef, Modal } from "antd";
+import { Button, Tooltip, Avatar, Form, Alert, InputRef, Modal, Space } from "antd";
 import Message from "../Message";
 import { AppContext } from "../../Context/AppProvider";
 import { addMessage } from "../../firebase/services";
@@ -8,6 +8,8 @@ import { AuthContext } from "../../Context/AuthProvider";
 import useFirestore from "../../hooks/useFirestore";
 import { AiFillVideoCamera } from 'react-icons/ai';
 import { RiUserAddLine } from 'react-icons/ri';
+import { RxExit } from 'react-icons/rx';
+import { BsExclamationCircle } from 'react-icons/bs';
 import { Input as AntdInput } from "antd";
 import { message } from 'antd';
 const HeaderStyled = styled.div`
@@ -82,13 +84,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
     const authContext = React.useContext(AuthContext);
     const uid = authContext?.user.uid;
     const photoURL = authContext?.user.photoURL;
-    const displayName = authContext?.user.displayName;
+    const displayName = authContext?.user.displayName || authContext?.user.email;
     const [inputValue, setInputValue] = useState("");
     const [form] = Form.useForm();
     const inputRef = useRef<InputRef | null>(null);
     const messageListRef = useRef<HTMLDivElement>(null);
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
+    };
+    const [open, setOpen] = useState(false);
+
+    const showModal = () => {
+        setOpen(true);
+    };
+
+    const handleExitGroup = () => {
+        console.log(members)
     };
     const handleOnSubmit = () => {
         form.validateFields().then(() => {
@@ -145,22 +156,46 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
             {selectedRoom.id ? (
                 <>
                     <HeaderStyled>
-                        <div className="header__info">
-                            <p className="header__title">{selectedRoom.displayName}</p>
-                            <span className="header__description">{selectedRoom.description}</span>
+                        <div style={{ display: "flex" }}>
+                            <div className="header__info">
+                                <p className="header__title">{selectedRoom.displayName}</p>
+                                <span className="header__description">{selectedRoom.description}</span>
+
+                            </div>
+                            <Tooltip title={"Rời khỏi nhóm"}>
+                                <Button
+                                    icon={<RxExit />}
+                                    type="text"
+                                    onClick={showModal}
+                                ></Button>
+                            </Tooltip>
+                            <Modal
+                                title="Rời khỏi nhóm chat?"
+                                centered
+                                open={open}
+                                onOk={handleExitGroup}
+                                onCancel={() => { setOpen(false); }}
+                                width={500}
+                            >
+                                <p>Bạn sẽ không nhận được tin nhắn từ cuộc trò chuyện này nữa. Mọi người sẽ thấy bạn rời nhóm <strong>{selectedRoom.displayName}</strong>. </p>
+                            </Modal>
                         </div>
                         <ButtonGroupStyled>
+
                             {!isCalling ? (
-                                <Button
-                                    icon={<AiFillVideoCamera />}
-                                    type="text"
-                                    onClick={() => {
-                                        setIsCalling(!isCalling);
-                                    }}
-                                ></Button>
+                                <Tooltip title={"Calling"}>
+                                    <Button
+                                        icon={<AiFillVideoCamera />}
+                                        type="text"
+                                        onClick={() => {
+                                            setIsCalling(!isCalling);
+                                        }}
+                                    ></Button>
+                                </Tooltip>
                             ) : (
                                 <></>
                             )}
+
                             <Button
                                 icon={<RiUserAddLine />}
                                 type="text"

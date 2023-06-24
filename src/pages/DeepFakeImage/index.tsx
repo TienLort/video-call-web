@@ -24,7 +24,6 @@ import {
     getDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { result } from "lodash";
 
 const DeepFakeImage = () => {
     const [image, setImage] = useState<File | null>(null);
@@ -39,7 +38,7 @@ const DeepFakeImage = () => {
     const navigate = useNavigate()
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files && event.target.files[0];
-
+        setImgVid([])
         if (!file) {
             // Người dùng không chọn ảnh
             alert("Vui lòng chọn một ảnh");

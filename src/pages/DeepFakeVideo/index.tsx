@@ -26,6 +26,7 @@ const DeepFakeVideo = () => {
         const file = event.target.files && event.target.files[0];
         setFile(file)
         setShowVideo(true);
+        setImgVid([])
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {

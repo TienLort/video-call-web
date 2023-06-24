@@ -108,27 +108,16 @@ const Login = () => {
 
   const onSubmitSignUp: SubmitHandler<IFormSignUp> = (data) => {
 
-    console.log(data);
-  };
-
-  const handleSubmitRegister = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!nameRegis || !emailRegis || !passwordRegis)
+    if (!data.nameRegis || !data.emailRegis || !data.passwordRegis)
       return console.log("Please fill in all fields!");
 
-    if (passwordRegis !== confirmPassword)
+    if (data.passwordRegis !== data.confirmPassword)
       return console.log("Passwords donot match!");
 
-    if (passwordRegis.length < 6) {
+    if (data.passwordRegis.length < 6) {
       return console.log("Password must be of length 3 or more");
     }
 
-    const data = {
-      nameRegis,
-      emailRegis,
-      passwordRegis,
-    };
     createUserWithEmailAndPassword(auth, data.emailRegis, data.passwordRegis).then(async (userCredential) => {
       // Signed in 
       const user = userCredential.user;
@@ -142,9 +131,9 @@ const Login = () => {
           });
         }
         const payload = {
-          userName: nameRegis,
+          userName: data.nameRegis,
           userDisplayName: user.email,
-          userPassword: passwordRegis
+          userPassword: data.passwordRegis
         }
         console.log(payload)
         await fetch(`${API_URL}/api/signup`, {
@@ -156,14 +145,14 @@ const Login = () => {
         })
           .then(response => {
             if (response.ok) {
-              // Chuyển đổi phản hồi từ JSON sang đối tượng JavaScript
+
               addDocument("Users", {
-                displayName: nameRegis,
+                displayName: data.nameRegis,
                 email: user.email,
                 photoURL: user.photoURL,
                 uid: user.uid,
                 providerId: additionalUserInfo.providerId,
-                keywords: generateKeywords(nameRegis?.toLowerCase() ?? ""),
+                keywords: generateKeywords(data.nameRegis?.toLowerCase() ?? ""),
               });
             } else {
               console.log("Request failed");
@@ -184,7 +173,7 @@ const Login = () => {
           console.log("Email Already Exists!");
         }
       });
-  }
+  };
   return (
     <div className={isRegister ? "login" : "login right-panel-active"}>
       <div className="form-container sign-up-container">

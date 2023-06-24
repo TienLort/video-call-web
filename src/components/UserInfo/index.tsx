@@ -19,9 +19,10 @@ const WrapperStyled = styled.div`
 
 const UserInfo = () => {
     const authContext = React.useContext(AuthContext);
-    const displayName = authContext?.user.displayName;
+    const displayName = authContext?.user.displayName || authContext?.user.email;
     const photoURL = authContext?.user.photoURL;
     const { clearState } = React.useContext(AppContext);
+    console.log(displayName)
     return (
         <WrapperStyled>
             <div>
