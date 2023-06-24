@@ -12,6 +12,9 @@ import { RxExit } from 'react-icons/rx';
 import { BsExclamationCircle } from 'react-icons/bs';
 import { Input as AntdInput } from "antd";
 import { message } from 'antd';
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "src/firebase/config";
+import { toast } from "react-toastify";
 const HeaderStyled = styled.div`
   display: flex;
   justify-content: space-between;
@@ -98,8 +101,37 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
         setOpen(true);
     };
 
-    const handleExitGroup = () => {
-        console.log(members)
+    const handleExitGroup = async () => {
+        const roomRef = doc(db, "rooms", selectedRoom.displayName); // Thay "rooms" bằng tên của collection và "hoa123" bằng id của tài liệu
+        const roomSnapshot = await getDoc(roomRef); // Lấy thông tin của tài liệu "hoa123"
+
+        if (roomSnapshot.exists()) {
+            const members = roomSnapshot.data().members; // Lấy mảng member từ tài liệu
+            console.log(members)
+            // Tìm và xóa phần tử có giá trị "tienma" trong mảng
+            const updatedMembers = members.filter((member: any) => member !== uid);
+
+            // Cập nhật lại trường member với mảng đã được cập nhật
+            await updateDoc(roomRef, { members: updatedMembers });
+            setOpen(false);
+            toast.success('Bạn đã rời nhóm chat!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
+            if (updatedMembers.length === 0) {
+                // Xóa tài liệu "hoa123"
+                await deleteDoc(roomRef);
+                message.info('nhóm trống đã được xóa');
+            }
+        } else {
+            message.error('lỗi hệ thống!');
+        }
     };
     const handleOnSubmit = () => {
         form.validateFields().then(() => {
