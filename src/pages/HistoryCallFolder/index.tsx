@@ -15,6 +15,7 @@ import { SlickSlider } from 'src/components/slick_slider';
 import { Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Loading from 'src/components/Loading';
 const HistoryCallFolder = () => {
     const location = useLocation();
     const id = location.pathname.split('/')[location.pathname.split('/').length - 1];
@@ -28,11 +29,13 @@ const HistoryCallFolder = () => {
     const auContext = useContext(AuthContext)
     const displayName = auContext?.user.displayName
     const [open, setOpen] = useState(Array(imgVid.length).fill(false));
+    const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<any>(null)
     const API_URL = "http://127.0.0.1:8000"
     const navigate = useNavigate()
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true)
             console.log(customData, id, displayName)
             if (id && displayName) {
 
@@ -91,6 +94,7 @@ const HistoryCallFolder = () => {
                     setImgVid(data1)
                     setImageData(data2);
                     setVideoData(data3);
+                    setIsLoading(false);
                 } catch (error) {
                     console.log("Error", error)
                 }
@@ -166,6 +170,13 @@ const HistoryCallFolder = () => {
     const handleNavigate = () => {
         navigate(-1);
     };
+    if (isLoading) {
+        return (
+            <div style={{ width: "100%" }}>
+                <Loading />
+            </div>
+        );
+    }
     return (
         <div style={{ height: "100%", overflowY: "auto" }}>
 

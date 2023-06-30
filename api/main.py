@@ -17,16 +17,14 @@ import json
 import firebase_admin
 from firebase_admin import credentials
 import matplotlib.pyplot as plt
+import multiprocessing
 # from firebase_admin import storage
 from google.cloud import storage
 from google.cloud import firestore
-import mediapipe as mp
-from tempfile import NamedTemporaryFile
-import io
-import base64
 import torch
 from fastapi.middleware.cors import CORSMiddleware
 # Tạo đối tượng firebase
+import glob
 
 cred = credentials.Certificate("E:\AI-PBL\PBL\ViT\\videocalldb.json")
 firebase_admin.initialize_app(cred, {
@@ -77,8 +75,6 @@ def upload_image(urlUpload, image_path):
 
     blob = bucket.blob(destination_path)
     blob.upload_from_filename(image_path)
-
-    print(urlUpload, image_path)
 
 
 def download_data_from_url(download_url, file_path, file_name, type):
@@ -175,7 +171,7 @@ def detect_video(urlUpload, original_path, new_path):
             (filename_img, extension_img) = os.path.splitext(img)
             if extension_img != '':
                 if os.path.getsize(img) != 0:
-                    detect(urlUpload, img, temp_new_path, imglist)
+                    detect(urlUpload, img, temp_new_path)
                 else:
                     len_imglists -= 1
 
@@ -209,19 +205,48 @@ def detect_img(urlUpload, original_path):
                     len_imglists -= 1
 
 
-def detect(urlUpload, img, new_path, imglist):
+def detect_faces_in_folder(urlUpload, original_path):
+    new_path_folder = original_path + "\\"+original_path.split("\\")[-1]
+    os.makedirs(new_path_folder)
+    img_list = glob.glob(os.path.join(original_path, '*.jpg'))
+    num_workers = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(processes=num_workers)
+    chunk_size = (len(img_list) + num_workers - 1) // num_workers
+    img_chunks = [img_list[i:i+chunk_size]
+                  for i in range(0, len(img_list), chunk_size)]
+    remainder = len(img_list) % num_workers
+    if remainder != 0:
+        img_chunks[-1] += img_list[-remainder:]
+    results = []
+    for i in range(num_workers):
+        result = pool.apply_async(
+            detect_worker, args=(urlUpload, img_chunks[i], new_path_folder))
+        results.append(result)
+
+    # Wait for all processes to complete
+    for result in results:
+        result.get()
+    pool.close()
+    pool.join()
+
+
+def detect_worker(urlUpload, img_list, new_path):
+    for img in img_list:
+        detect(urlUpload, img, new_path)
+
+
+def detect(urlUpload, img, new_path):
     image = face_recognition.load_image_file(img)
     face_locations = face_recognition.face_locations(image)
 
-    # In this case: save the first face found in a pic
-    # Get the location of each face in this image
     if len(face_locations) == 0:
         return []
     top, right, bottom, left = face_locations[0]
     face_image = image[top:bottom, left:right]
     pil_image = Image.fromarray(face_image)
     resized_face = pil_image.resize((resize_x, resize_y))
-    (filename, extension) = os.path.splitext(imglist)
+    filenameImg = os.path.basename(img)
+    (filename, extension) = os.path.splitext(filenameImg)
     resized_face.save(new_path+'/FR_'+filename+extension)
     if "Pic" not in filename:
         upload_image(urlUpload, new_path+'/FR_' +
@@ -248,7 +273,6 @@ def get_data(data_dir, type):
         except Exception as e:
             print(e)
     video = {}
-    print(frames_paths_dict)
     for key, frame_images in frames_paths_dict.items():
         for frame_image in frame_images:
             img_arr = cv2.imread(os.path.join(path, frame_image))[..., ::-1]
@@ -266,7 +290,7 @@ def custom_video_round(preds):
     #         totalFake += 1
     #     else:
     #         totalReal += 1
-    # if(totalFake/totalReal > 2):
+    # if(totalFake - totalReal > totalReal):
     #     return 1
     # else:
     return mean(preds)
@@ -429,15 +453,16 @@ async def process_findface(data: DeepFake):
         expiration=datetime.timedelta(minutes=15),  # Thời gian hết hạn của URL
         method="GET"
     )
-    print(download_url)
     updated_url = refresh_url(blob)
     delFolder(out_path)
     download_data_from_url(updated_url, out_path, data.urlUpload.split(
         "/")[-1].split(".")[0], data.type)
     if(data.type == "video"):
         framing(data.urlUpload, updated_url, out_path)
-        detect_video(data.urlUpload, out_path, out_path+"\\" +
-                     data.urlUpload.split("/")[-1].split(".")[0])
+        # detect_video(data.urlUpload, out_path, out_path+"\\" +
+        #              data.urlUpload.split("/")[-1].split(".")[0])
+        detect_faces_in_folder(data.urlUpload, out_path+"\\" +
+                               data.urlUpload.split("/")[-1].split(".")[0])
     else:
         detect_img(data.urlUpload, out_path)
     end_time = time.time()

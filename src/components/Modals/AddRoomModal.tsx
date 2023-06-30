@@ -5,6 +5,8 @@ import { addDocument } from "../../firebase/services";
 import { AuthContext } from "../../Context/AuthProvider";
 import { toast } from 'react-toastify';
 import { message } from 'antd';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "src/firebase/config";
 const AddRoomModal = () => {
   const { isAddRoomVisible, setIsAddRoomVisible } = useContext(AppContext);
   const authContext = React.useContext(AuthContext);
@@ -12,29 +14,39 @@ const AddRoomModal = () => {
   const [form] = Form.useForm();
 
   const handleOk = () => {
+    form.validateFields().then(async () => {
+      const collectionRef = collection(db, "rooms");
+      const querySnapshot = await getDocs(collectionRef);
+      let isDuplicate = false;
 
-    form.validateFields().then(() => {
-      addDocument("rooms", { ...form.getFieldsValue(), members: [uid] });
-      form.resetFields();
-      toast.success('Tạo phòng thành công!', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
+      querySnapshot.forEach((doc) => {
+        if (doc.id === form.getFieldsValue().displayName) {
+          isDuplicate = true;
+          return;
+        }
       });
-      setIsAddRoomVisible(false);
+
+      if (isDuplicate) {
+        message.warning('Tên phòng đã tồn tại, bạn có thể đặt tên khác');
+      } else {
+        addDocument("rooms", { ...form.getFieldsValue(), members: [uid] });
+        form.resetFields();
+        toast.success('Tạo phòng thành công!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        setIsAddRoomVisible(false);
+      }
     }).catch((errors) => {
       // Hiển thị thông báo lỗi
       message.error('Vui lòng điền đầy đủ thông tin');
     });
-
-
-    // reset form value
-
   };
 
   const handleCancel = () => {

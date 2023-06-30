@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Button, Tooltip, Avatar, Form, Alert, InputRef, Modal } from "antd";
+import { Button, Tooltip, Avatar, Form, Alert, InputRef, Modal, Space } from "antd";
 import Message from "../Message";
 import { AppContext } from "../../Context/AppProvider";
 import { addMessage } from "../../firebase/services";
@@ -8,8 +8,13 @@ import { AuthContext } from "../../Context/AuthProvider";
 import useFirestore from "../../hooks/useFirestore";
 import { AiFillVideoCamera } from 'react-icons/ai';
 import { RiUserAddLine } from 'react-icons/ri';
+import { RxExit } from 'react-icons/rx';
+import { BsExclamationCircle } from 'react-icons/bs';
 import { Input as AntdInput } from "antd";
 import { message } from 'antd';
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "src/firebase/config";
+import { toast } from "react-toastify";
 const HeaderStyled = styled.div`
   display: flex;
   justify-content: space-between;
@@ -82,13 +87,51 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
     const authContext = React.useContext(AuthContext);
     const uid = authContext?.user.uid;
     const photoURL = authContext?.user.photoURL;
-    const displayName = authContext?.user.displayName;
+    const displayName = authContext?.user.displayName || authContext?.user.email;
     const [inputValue, setInputValue] = useState("");
     const [form] = Form.useForm();
     const inputRef = useRef<InputRef | null>(null);
     const messageListRef = useRef<HTMLDivElement>(null);
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
+    };
+    const [open, setOpen] = useState(false);
+
+    const showModal = () => {
+        setOpen(true);
+    };
+
+    const handleExitGroup = async () => {
+        const roomRef = doc(db, "rooms", selectedRoom.displayName); // Thay "rooms" bằng tên của collection và "hoa123" bằng id của tài liệu
+        const roomSnapshot = await getDoc(roomRef); // Lấy thông tin của tài liệu "hoa123"
+
+        if (roomSnapshot.exists()) {
+            const members = roomSnapshot.data().members; // Lấy mảng member từ tài liệu
+            console.log(members)
+            // Tìm và xóa phần tử có giá trị "tienma" trong mảng
+            const updatedMembers = members.filter((member: any) => member !== uid);
+
+            // Cập nhật lại trường member với mảng đã được cập nhật
+            await updateDoc(roomRef, { members: updatedMembers });
+            setOpen(false);
+            toast.success('Bạn đã rời nhóm chat!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
+            if (updatedMembers.length === 0) {
+                // Xóa tài liệu "hoa123"
+                await deleteDoc(roomRef);
+                message.info('nhóm trống đã được xóa');
+            }
+        } else {
+            message.error('lỗi hệ thống!');
+        }
     };
     const handleOnSubmit = () => {
         form.validateFields().then(() => {
@@ -145,22 +188,46 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ width }) => {
             {selectedRoom.id ? (
                 <>
                     <HeaderStyled>
-                        <div className="header__info">
-                            <p className="header__title">{selectedRoom.displayName}</p>
-                            <span className="header__description">{selectedRoom.description}</span>
+                        <div style={{ display: "flex" }}>
+                            <div className="header__info">
+                                <p className="header__title">{selectedRoom.displayName}</p>
+                                <span className="header__description">{selectedRoom.description}</span>
+
+                            </div>
+                            <Tooltip title={"Rời khỏi nhóm"}>
+                                <Button
+                                    icon={<RxExit />}
+                                    type="text"
+                                    onClick={showModal}
+                                ></Button>
+                            </Tooltip>
+                            <Modal
+                                title="Rời khỏi nhóm chat?"
+                                centered
+                                open={open}
+                                onOk={handleExitGroup}
+                                onCancel={() => { setOpen(false); }}
+                                width={500}
+                            >
+                                <p>Bạn sẽ không nhận được tin nhắn từ cuộc trò chuyện này nữa. Mọi người sẽ thấy bạn rời nhóm <strong>{selectedRoom.displayName}</strong>. </p>
+                            </Modal>
                         </div>
                         <ButtonGroupStyled>
+
                             {!isCalling ? (
-                                <Button
-                                    icon={<AiFillVideoCamera />}
-                                    type="text"
-                                    onClick={() => {
-                                        setIsCalling(!isCalling);
-                                    }}
-                                ></Button>
+                                <Tooltip title={"Calling"}>
+                                    <Button
+                                        icon={<AiFillVideoCamera />}
+                                        type="text"
+                                        onClick={() => {
+                                            setIsCalling(!isCalling);
+                                        }}
+                                    ></Button>
+                                </Tooltip>
                             ) : (
                                 <></>
                             )}
+
                             <Button
                                 icon={<RiUserAddLine />}
                                 type="text"

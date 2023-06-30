@@ -26,6 +26,7 @@ const DeepFakeVideo = () => {
         const file = event.target.files && event.target.files[0];
         setFile(file)
         setShowVideo(true);
+        setImgVid([])
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
@@ -131,11 +132,13 @@ const DeepFakeVideo = () => {
                     // Xử lý lỗi ở đây
                     console.error(error);
                     message.error('Hệ thống không thể nhận diện khuôn mặt! ');
+                    setIsLoading(false);
                 }
             } else {
                 // Xử lý khi gọi findface API không thành công
-                message.error('Hệ thống không thể nhận diện khuôn mặt!');
                 setIsLoading(false)
+                message.error('Hệ thống không thể nhận diện khuôn mặt!');
+
             }
             setIsLoading(false)
         } else {

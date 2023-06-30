@@ -11,23 +11,19 @@ import {
     faFolder,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Loading from 'src/components/Loading';
 
 const ManagerFolder = () => {
-    const [selectedFolder, setSelectedFolder] = useState<string[]>([]);
     const [folder, setFolder] = useState<string[]>([]);
     const auContext = useContext(AuthContext)
     const displayName = auContext?.user.displayName
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate()
-    const handleCheckboxChange = (data: string) => {
-        if (selectedFolder.includes(data)) {
-            setSelectedFolder(prevSelectedFolder => prevSelectedFolder.filter(item => item !== data));
-        } else {
-            setSelectedFolder(prevSelectedFolder => [...prevSelectedFolder, data]);
-        }
-    };
+
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true)
             if (displayName) {
                 const listRef = ref(storage, displayName);
                 const data: string[] = [];
@@ -40,10 +36,19 @@ const ManagerFolder = () => {
                 }
                 await Promise.all(promises);
                 setFolder(data);
+                setIsLoading(false);
+
             }
         }
         fetchData();
     }, [])
+    if (isLoading) {
+        return (
+            <div style={{ width: "100%" }}>
+                <Loading />
+            </div>
+        );
+    }
     return (
         <div >
             <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", padding: "8px 40px" }}>
