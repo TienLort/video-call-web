@@ -8,12 +8,11 @@ from PIL import Image
 import requests
 import shutil
 import numpy as np
-from efficient_vit1 import EfficientViT
+from efficient_vit import EfficientViT
 from progress.bar import Bar
 from statistics import mean
 import time
 import datetime
-import json
 import firebase_admin
 from firebase_admin import credentials
 import matplotlib.pyplot as plt
@@ -26,14 +25,14 @@ from fastapi.middleware.cors import CORSMiddleware
 # Tạo đối tượng firebase
 import glob
 
-cred = credentials.Certificate("E:\AI-PBL\PBL\ViT\\videocalldb.json")
+cred = credentials.Certificate("./videocalldb.json")
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'videocalldb.appspot.com'
 })
 bucket_name = 'videocalldb.appspot.com'
 
 out_path = "E:\AI-PBL\\PBL\\video-call-web\\api\\data"
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "E:\AI-PBL\PBL\ViT\\videocalldb.json"
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./videocalldb.json"
 db = firestore.Client()
 client = storage.Client()
 
@@ -311,9 +310,9 @@ def UploadResult(document_name, data):
     doc_ref.set(data)
 
 
-modelTest = EfficientViT(channels=1280, selected_efficient_net=0)
+modelTest = EfficientViT(channels=1280)
 modelTest.load_state_dict(torch.load(
-    'E:\AI-PBL\PBL\\BaoCaoDoAn\\EfficientViT_checkpoint_39_v2.pt', map_location=torch.device('cpu')))
+    'E:\AI-PBL\PBL\\BaoCaoDoAn\\EfficientViT_checkpoint_39_final.pt', map_location=torch.device('cpu')))
 modelTest.eval()
 modelTest = modelTest.cpu()
 
