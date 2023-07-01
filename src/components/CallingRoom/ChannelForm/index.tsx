@@ -11,7 +11,7 @@ const ChannelForm = (props: {
     const { setInCall, setChannelName, channelName } = props;
     const { selectedRoom, setIsCalling } = useContext(AppContext);
     const authContext = React.useContext(AuthContext);
-    const displayName = authContext?.user.displayName;
+    const displayName = authContext?.user.displayName || authContext?.user.email;
     const handleCheckInput = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         if (channelName != "") {
             e.preventDefault();

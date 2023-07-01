@@ -15,7 +15,6 @@ import time
 import datetime
 import firebase_admin
 from firebase_admin import credentials
-import matplotlib.pyplot as plt
 import multiprocessing
 # from firebase_admin import storage
 from google.cloud import storage
@@ -31,7 +30,7 @@ firebase_admin.initialize_app(cred, {
 })
 bucket_name = 'videocalldb.appspot.com'
 
-out_path = "E:\AI-PBL\\PBL\\video-call-web\\api\\data"
+out_path = "./data"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./videocalldb.json"
 db = firestore.Client()
 client = storage.Client()
@@ -199,7 +198,7 @@ def detect_img(urlUpload, original_path):
             if extension_img != '':
                 # exclude error img
                 if os.path.getsize(img) != 0:
-                    detect(urlUpload, img, temp_new_path, imglist)
+                    detect(urlUpload, img, temp_new_path)
                 else:
                     len_imglists -= 1
 
@@ -208,7 +207,7 @@ def detect_faces_in_folder(urlUpload, original_path):
     new_path_folder = original_path + "\\"+original_path.split("\\")[-1]
     os.makedirs(new_path_folder)
     img_list = glob.glob(os.path.join(original_path, '*.jpg'))
-    num_workers = multiprocessing.cpu_count()
+    num_workers = 2 if multiprocessing.cpu_count() > 2 else multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=num_workers)
     chunk_size = (len(img_list) + num_workers - 1) // num_workers
     img_chunks = [img_list[i:i+chunk_size]

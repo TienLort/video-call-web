@@ -72,7 +72,7 @@ const ManagerFolder = () => {
                         key={index}
                         className="element-col disable-select"
                     >
-                        <FontAwesomeIcon icon={faFolder} className="mt-3" style={{ fontSize: "3rem" }} />
+                        <FontAwesomeIcon icon={faFolder} className="mt-3" style={{ fontSize: "3rem", color: "#ebaa0f" }} />
                         <p className="text-center mt-3">{data}</p>
                     </div>
                 ))}
